@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String
+  slug        String       @unique
+  users       User[]
+  permissions Permission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String
+  roleId    Int
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([slug, roleId])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  roleId    Int
+  role      Role     @relation(fields: [roleId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Doctor {
+  id        Int              @id @default(autoincrement())
+  name      String
+  specialty String
+  photo     String?
+  bio       String?          @db.Text
+  isActive  Boolean          @default(true)
+  schedules DoctorSchedule[]
+  bookings  Booking[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model DoctorSchedule {
+  id        Int      @id @default(autoincrement())
+  doctorId  Int
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  day       String
+  startTime String
+  endTime   String
+  quota     Int      @default(20)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  icon        String?
+  image       String?
+  isFeatured  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Article {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  category    String
+  excerpt     String
+  content     String    @db.Text
+  image       String?
+  status      String    @default("draft")
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Gallery {
+  id        Int      @id @default(autoincrement())
+  title     String
+  image     String
+  alt       String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  patientName String
+  phone       String
+  service     String
+  doctorId    Int?
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+  bookingDate DateTime
+  status      String   @default("menunggu")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   @db.Text
+  label       String
+  group       String   @default("general")
+  type        String   @default("text")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
