@@ -118,7 +118,7 @@ export default async function HomePage() {
           <div className="hero-panel" aria-label="Pencarian layanan">
             <HeroSearchPanel />
             <div className="emergency-strip">
-              <Ambulance size={22} />
+              <Ambulance size={60} />
               <div>
                 <span>Gawat Darurat</span>
                 <strong>Siaga 24 Jam</strong>
@@ -138,7 +138,7 @@ export default async function HomePage() {
             ["IGD 24 Jam", Ambulance]
           ].map(([label, Icon]) => (
             <a href="#jadwal" className="quick-card" key={label}>
-              <Icon size={24} />
+              <Icon size={50} />
               <span>{label}</span>
             </a>
           ))}
