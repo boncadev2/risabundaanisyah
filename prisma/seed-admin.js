@@ -19,6 +19,14 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@rsia.test").trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || "password";
+  const adminName = process.env.ADMIN_NAME || "Admin RSIA";
+
+  if (adminPassword.length < 8) {
+    throw new Error("ADMIN_PASSWORD minimal 8 karakter untuk akun production.");
+  }
+
   const role = await prisma.role.upsert({
     where: { slug: "super_admin" },
     update: { name: "Super Admin" },
@@ -29,16 +37,17 @@ async function main() {
   });
 
   const user = await prisma.user.upsert({
-    where: { email: "admin@rsia.test" },
+    where: { email: adminEmail },
     update: {
-      name: "Admin RSIA",
+      name: adminName,
+      password: await bcrypt.hash(adminPassword, 10),
       roleId: role.id,
       isActive: true
     },
     create: {
-      name: "Admin RSIA",
-      email: "admin@rsia.test",
-      password: await bcrypt.hash("password", 10),
+      name: adminName,
+      email: adminEmail,
+      password: await bcrypt.hash(adminPassword, 10),
       roleId: role.id,
       isActive: true
     }

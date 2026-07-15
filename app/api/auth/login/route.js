@@ -55,7 +55,8 @@ async function findPrismaUser(email, password) {
       email: user.email,
       role: user.role.slug
     };
-  } catch {
+  } catch (error) {
+    console.error("Failed to login with database user", error);
     return null;
   }
 }
