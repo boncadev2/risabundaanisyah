@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import MobileAutoSlider from "@/components/MobileAutoSlider";
 
 export default function GalleryGrid({ galleries, className = "" }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,14 +34,14 @@ export default function GalleryGrid({ galleries, className = "" }) {
 
   return (
     <>
-      <div className={`gallery-grid card-ready ${className}`}>
+      <MobileAutoSlider label="Galeri" className={`gallery-mobile-slider card-ready ${className}`}>
         {galleries.map((gallery, index) => (
           <button className="gallery-card" type="button" key={gallery.title} onClick={() => setActiveIndex(index)}>
             <img src={gallery.image} alt={gallery.alt} />
             <span>{gallery.title}</span>
           </button>
         ))}
-      </div>
+      </MobileAutoSlider>
 
       {activeGallery && (
         <div className="lightbox" role="dialog" aria-modal="true" aria-label="Preview galeri">

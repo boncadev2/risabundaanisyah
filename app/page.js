@@ -5,6 +5,8 @@ import DoctorSlider from "@/components/DoctorSlider";
 import GalleryGrid from "@/components/GalleryGrid";
 import HeroSearchPanel from "@/components/HeroSearchPanel";
 import LoadingReveal from "@/components/LoadingReveal";
+import MobileAutoSlider from "@/components/MobileAutoSlider";
+import MobileMenu from "@/components/MobileMenu";
 import {
   Ambulance,
   Baby,
@@ -100,6 +102,7 @@ export default async function HomePage() {
             <a href="#artikel">Artikel</a>
             <Link href="/admin" className="nav-login"><ShieldCheck size={17} /> Admin</Link>
           </nav>
+          <MobileMenu />
         </div>
       </header>
 
@@ -151,7 +154,7 @@ export default async function HomePage() {
           <h2>Perawatan lengkap untuk bunda, bayi, dan keluarga.</h2>
         </div>
         <LoadingReveal className="service-grid" count={services.length || 4}>
-          <div className="service-grid">
+          <MobileAutoSlider label="Layanan" className="service-mobile-slider">
             {services.map((service) => {
               const Icon = iconMap[service.icon] || HeartPulse;
               const image = serviceImages[service.icon] || serviceImages.pregnant;
@@ -169,7 +172,7 @@ export default async function HomePage() {
                 </article>
               );
             })}
-          </div>
+          </MobileAutoSlider>
         </LoadingReveal>
       </section>
 

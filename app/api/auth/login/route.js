@@ -4,7 +4,7 @@ import { sessionCookieName, signSession } from "@/lib/auth";
 
 export async function POST(request) {
   const formData = await request.formData();
-  const email = String(formData.get("email") || "");
+  const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
 
   const user = await findUser(email, password);
@@ -33,21 +33,7 @@ export async function POST(request) {
 }
 
 async function findUser(email, password) {
-  if (process.env.USE_PRISMA === "true") {
-    const prismaUser = await findPrismaUser(email, password);
-    if (prismaUser) return prismaUser;
-  }
-
-  if (email === "admin@rsia.test" && password === "password") {
-    return {
-      id: 1,
-      name: "Admin RSIA",
-      email,
-      role: "super_admin"
-    };
-  }
-
-  return null;
+  return findPrismaUser(email, password);
 }
 
 async function findPrismaUser(email, password) {

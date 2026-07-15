@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import MobileAutoSlider from "@/components/MobileAutoSlider";
 
 export default function ArticleGrid({ articles, className = "" }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,21 +30,23 @@ export default function ArticleGrid({ articles, className = "" }) {
     );
   }
 
+  const content = articles.map((article) => (
+    <article className="article-card" key={article.slug || article.title}>
+      <Link href={`/artikel/${article.slug || ""}`} className="article-image-link" aria-label={`Baca ${article.title}`}>
+        <img src={article.image} alt={article.title} />
+      </Link>
+      <div>
+        <span className="badge neutral">{article.category}</span>
+        <h3>{article.title}</h3>
+        <p>{article.description}</p>
+        <Link className="read-more" href={`/artikel/${article.slug || ""}`}>Baca Lengkap</Link>
+      </div>
+    </article>
+  ));
+
   return (
-    <div className={`article-grid card-ready ${className}`}>
-      {articles.map((article) => (
-        <article className="article-card" key={article.slug || article.title}>
-          <Link href={`/artikel/${article.slug || ""}`} className="article-image-link" aria-label={`Baca ${article.title}`}>
-            <img src={article.image} alt={article.title} />
-          </Link>
-          <div>
-            <span className="badge neutral">{article.category}</span>
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-            <Link className="read-more" href={`/artikel/${article.slug || ""}`}>Baca Lengkap</Link>
-          </div>
-        </article>
-      ))}
-    </div>
+    <MobileAutoSlider label="Artikel" className={`article-mobile-slider card-ready ${className}`}>
+      {content}
+    </MobileAutoSlider>
   );
 }

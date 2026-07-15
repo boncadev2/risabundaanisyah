@@ -465,6 +465,7 @@ function SettingsModule({ user, settings }) {
         <div className="settings-image-preview">
           <span>Preview Hero Image</span>
           <img src={heroPreview} alt="Preview hero homepage" />
+          <small>{settings.hero_image ? `Tersimpan: ${settings.hero_image}` : "Belum ada gambar hero di database."}</small>
         </div>
         <label className="settings-wide">Google Maps Embed URL<textarea name="maps_embed_url" defaultValue={settings.maps_embed_url} placeholder="Tempel URL dari src iframe Google Maps embed" /></label>
         <p className="settings-help">Lokasi peta di halaman depan akan mengikuti URL ini dari database. Ambil dari Google Maps: Share, Embed a map, lalu salin isi src iframe.</p>

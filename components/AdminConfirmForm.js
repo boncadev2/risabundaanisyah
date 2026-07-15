@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 
-export default function AdminConfirmForm({ action, children, className = "", confirmMessage = "Simpan perubahan data ini?", ...props }) {
+export default function AdminConfirmForm({ action, children, className = "", confirmMessage = "Simpan perubahan data ini?", encType = "multipart/form-data", ...props }) {
   const formRef = useRef(null);
   const confirmedRef = useRef(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function AdminConfirmForm({ action, children, className = "", con
 
   return (
     <>
-      <form ref={formRef} action={action} className={className} onSubmit={handleSubmit} {...props}>
+      <form ref={formRef} action={action} className={className} encType={encType} onSubmit={handleSubmit} {...props}>
         {children}
       </form>
 
