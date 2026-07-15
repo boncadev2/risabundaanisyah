@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { requestUrl } from "@/lib/auth";
 
 const protectedRoutes = ["/admin"];
 
@@ -12,7 +13,7 @@ export function proxy(request) {
   const token = request.cookies.get("rsia_session")?.value;
 
   if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(requestUrl(request, "/login"));
   }
 
   try {
@@ -20,12 +21,12 @@ export function proxy(request) {
     const allowedRoles = ["super_admin", "admin", "operator"];
 
     if (!allowedRoles.includes(user.role)) {
-      return NextResponse.redirect(new URL("/login?error=forbidden", request.url));
+      return NextResponse.redirect(requestUrl(request, "/login?error=forbidden"));
     }
 
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(requestUrl(request, "/login"));
   }
 }
 

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { sessionCookieName, signSession } from "@/lib/auth";
+import { requestUrl, sessionCookieName, signSession } from "@/lib/auth";
 
 export async function POST(request) {
   const formData = await request.formData();
@@ -10,7 +10,7 @@ export async function POST(request) {
   const user = await findUser(email, password);
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login?error=invalid", request.url), 303);
+    return NextResponse.redirect(requestUrl(request, "/login?error=invalid"), 303);
   }
 
   const token = signSession({
@@ -20,7 +20,7 @@ export async function POST(request) {
     role: user.role
   });
 
-  const response = NextResponse.redirect(new URL("/admin", request.url), 303);
+  const response = NextResponse.redirect(requestUrl(request, "/admin"), 303);
   response.cookies.set(sessionCookieName(), token, {
     httpOnly: true,
     sameSite: "lax",
