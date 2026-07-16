@@ -34,7 +34,7 @@ export default function GalleryGrid({ galleries, className = "" }) {
 
   return (
     <>
-      <MobileAutoSlider label="Galeri" className={`gallery-mobile-slider card-ready ${className}`}>
+      <MobileAutoSlider label="Galeri" className={`gallery-mobile-slider card-ready ${className}`} enableDesktop>
         {galleries.map((gallery, index) => (
           <button className="gallery-card" type="button" key={gallery.title} onClick={() => setActiveIndex(index)}>
             <img src={gallery.image} alt={gallery.alt} />

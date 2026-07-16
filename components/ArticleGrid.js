@@ -45,7 +45,7 @@ export default function ArticleGrid({ articles, className = "" }) {
   ));
 
   return (
-    <MobileAutoSlider label="Artikel" className={`article-mobile-slider card-ready ${className}`}>
+    <MobileAutoSlider label="Artikel" className={`article-mobile-slider card-ready ${className}`} enableDesktop>
       {content}
     </MobileAutoSlider>
   );

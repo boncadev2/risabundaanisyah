@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-export default function MobileAutoSlider({ children, label, className = "" }) {
+export default function MobileAutoSlider({ children, label, className = "", enableDesktop = false }) {
   const trackRef = useRef(null);
 
   function slide(direction) {
@@ -31,14 +31,14 @@ export default function MobileAutoSlider({ children, label, className = "" }) {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (window.matchMedia("(max-width: 700px)").matches) slide(1);
+      if (enableDesktop || window.matchMedia("(max-width: 700px)").matches) slide(1);
     }, 3600);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [enableDesktop]);
 
   return (
-    <div className={`mobile-auto-slider ${className}`}>
+    <div className={`mobile-auto-slider ${enableDesktop ? "desktop-auto-slider" : ""} ${className}`}>
       <button className="slider-btn left mobile-slider-btn" type="button" aria-label={`${label} sebelumnya`} onClick={() => slide(-1)}>
         <ChevronLeft size={24} />
       </button>

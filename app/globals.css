@@ -912,6 +912,29 @@ input {
   display: none;
 }
 
+.desktop-auto-slider.article-mobile-slider .mobile-auto-track,
+.desktop-auto-slider.gallery-mobile-slider .mobile-auto-track {
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 36px) / 3);
+  grid-template-columns: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: 4px;
+  scroll-snap-type: x mandatory;
+  padding: 4px 4px 18px;
+  scrollbar-color: var(--brand-blue) var(--primary-soft);
+  scrollbar-width: thin;
+}
+
+.desktop-auto-slider.article-mobile-slider .article-card,
+.desktop-auto-slider.gallery-mobile-slider .gallery-card {
+  scroll-snap-align: start;
+}
+
+.desktop-auto-slider .mobile-slider-btn {
+  display: inline-flex;
+}
+
 .slider-btn {
   position: absolute;
   top: 50%;
