@@ -39,15 +39,32 @@ async function findUser(email, password) {
 async function findPrismaUser(email, password) {
   try {
     const { prisma } = await import("@/lib/prisma");
+    const allowedRoles = ["super_admin", "admin", "operator"];
     const user = await prisma.user.findUnique({
       where: { email },
       include: { role: true }
     });
 
-    if (!user || !user.isActive) return null;
+    if (!user) {
+      console.warn(`Login failed: user not found (${email})`);
+      return null;
+    }
+
+    if (!user.isActive) {
+      console.warn(`Login failed: inactive user (${email})`);
+      return null;
+    }
+
+    if (!allowedRoles.includes(user.role?.slug)) {
+      console.warn(`Login failed: role not allowed (${email}, role: ${user.role?.slug || "none"})`);
+      return null;
+    }
 
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return null;
+    if (!validPassword) {
+      console.warn(`Login failed: invalid password (${email})`);
+      return null;
+    }
 
     return {
       id: user.id,
