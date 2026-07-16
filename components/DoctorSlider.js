@@ -189,17 +189,12 @@ export default function DoctorSlider({ doctors }) {
                 </button>
                 <span>{doctor.specialty}</span>
                 <h3>{doctor.name}</h3>
-                <div className="doctor-schedule-list">
-                  {getDoctorSchedules(doctor).map((schedule) => (
-                    <p key={`${schedule.day}-${schedule.time}`}>
-                      <strong>{schedule.day}</strong>
-                      <small>{schedule.time}</small>
-                    </p>
-                  ))}
-                </div>
                 <b className={doctor.status === "Tersedia" ? "doctor-status available" : "doctor-status full"}>
                   {doctor.status}
                 </b>
+                <button className="doctor-profile-cta" type="button" onClick={() => setActiveDoctor(doctor)}>
+                  Lihat Profil
+                </button>
               </article>
             ))}
           </div>

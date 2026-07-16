@@ -49,19 +49,22 @@ export default async function HomePage() {
   const heroImage = imageUrl(settings.hero_image, "/uploads/hero-rsia-bunda-annisyah.png");
   const mapEmbedUrl = String(settings.maps_embed_url || "").trim();
   const whatsappHref = `https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Halo RSIA Bunda Annisyah, saya ingin booking jadwal konsultasi.")}`;
-  const doctorScheduleRows = doctors.flatMap((doctor) => {
+  const doctorScheduleGroups = doctors.map((doctor) => {
     const schedules = Array.isArray(doctor.schedules) && doctor.schedules.length
       ? doctor.schedules
       : [{ day: doctor.schedule, time: doctor.time, status: doctor.status }];
 
-    return schedules.map((schedule, index) => ({
-      key: `${doctor.name}-${schedule.day}-${schedule.time}-${index}`,
+    return {
+      key: doctor.name,
       name: doctor.name,
       specialty: doctor.specialty,
-      day: schedule.day || "Belum diatur",
-      time: schedule.time || "-",
-      status: schedule.status || doctor.status
-    }));
+      schedules: schedules.map((schedule, index) => ({
+        key: `${doctor.name}-${schedule.day || "day"}-${schedule.time || "time"}-${index}`,
+        day: schedule.day || "Belum diatur",
+        time: schedule.time || "-",
+        status: schedule.status || doctor.status
+      }))
+    };
   });
   const socialLinks = [
     { label: "Facebook", href: settings.facebook_url, Icon: Facebook },
@@ -210,15 +213,21 @@ export default async function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {doctorScheduleRows.map((schedule) => (
-                  <tr key={schedule.key}>
-                    <td>{schedule.name}</td>
-                    <td>{schedule.specialty}</td>
-                    <td>{schedule.day}</td>
-                    <td>{schedule.time}</td>
-                    <td><span className={schedule.status === "Tersedia" ? "badge success" : "badge danger"}>{schedule.status}</span></td>
-                  </tr>
-                ))}
+                {doctorScheduleGroups.flatMap((doctor) =>
+                  doctor.schedules.map((schedule, index) => (
+                    <tr key={schedule.key}>
+                      {index === 0 && (
+                        <>
+                          <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.name}</td>
+                          <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.specialty}</td>
+                        </>
+                      )}
+                      <td>{schedule.day}</td>
+                      <td>{schedule.time}</td>
+                      <td><span className={schedule.status === "Tersedia" ? "badge success" : "badge danger"}>{schedule.status}</span></td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
