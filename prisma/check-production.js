@@ -16,12 +16,20 @@ function createMariaDbAdapter() {
   });
 }
 
+function getUploadDir() {
+  if (process.env.UPLOAD_DIR) {
+    return path.resolve(process.env.UPLOAD_DIR);
+  }
+
+  return path.join(process.cwd(), "public", "uploads");
+}
+
 const prisma = new PrismaClient({
   adapter: createMariaDbAdapter()
 });
 
 async function checkUploadDir() {
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = getUploadDir();
   const testFile = path.join(uploadDir, `.write-test-${Date.now()}.txt`);
 
   await mkdir(uploadDir, { recursive: true });
