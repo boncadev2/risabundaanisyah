@@ -40,9 +40,14 @@ function refresh(module, notice = "saved") {
   redirect(`/admin?module=${module}&notice=${notice}`);
 }
 
-function logActionError(action, error) {
+function isRedirectError(error) {
+  return typeof error?.digest === "string" && error.digest.startsWith("NEXT_REDIRECT");
+}
+
+function logActionError(action, module, error) {
+  if (isRedirectError(error)) throw error;
   console.error(`Admin action failed: ${action}`, error);
-  throw error;
+  redirect(`/admin?module=${module}&notice=failed`);
 }
 
 export async function createDoctor(formData) {
@@ -60,24 +65,28 @@ export async function createDoctor(formData) {
     });
     refresh("dokter", "created");
   } catch (error) {
-    logActionError("createDoctor", error);
+    logActionError("createDoctor", "dokter", error);
   }
 }
 
 export async function updateDoctor(formData) {
-  await requireAdmin();
-  const photo = await saveUploadedImage(formData, "photoFile", text(formData, "photo"));
-  await prisma.doctor.update({
-    where: { id: number(formData, "id") },
-    data: {
-      name: text(formData, "name"),
-      specialty: text(formData, "specialty"),
-      photo,
-      bio: text(formData, "bio") || null,
-      isActive: bool(formData, "isActive")
-    }
-  });
-  refresh("dokter", "updated");
+  try {
+    await requireAdmin();
+    const photo = await saveUploadedImage(formData, "photoFile", text(formData, "photo"));
+    await prisma.doctor.update({
+      where: { id: number(formData, "id") },
+      data: {
+        name: text(formData, "name"),
+        specialty: text(formData, "specialty"),
+        photo,
+        bio: text(formData, "bio") || null,
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("dokter", "updated");
+  } catch (error) {
+    logActionError("updateDoctor", "dokter", error);
+  }
 }
 
 export async function deleteDoctor(formData) {
@@ -187,27 +196,31 @@ export async function createService(formData) {
     });
     refresh("layanan", "created");
   } catch (error) {
-    logActionError("createService", error);
+    logActionError("createService", "layanan", error);
   }
 }
 
 export async function updateService(formData) {
-  await requireAdmin();
-  const title = text(formData, "title");
-  const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
-  await prisma.service.update({
-    where: { id: number(formData, "id") },
-    data: {
-      title,
-      slug: text(formData, "slug") || slugify(title),
-      description: text(formData, "description"),
-      icon: text(formData, "icon") || null,
-      image,
-      isFeatured: bool(formData, "isFeatured"),
-      isActive: bool(formData, "isActive")
-    }
-  });
-  refresh("layanan", "updated");
+  try {
+    await requireAdmin();
+    const title = text(formData, "title");
+    const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
+    await prisma.service.update({
+      where: { id: number(formData, "id") },
+      data: {
+        title,
+        slug: text(formData, "slug") || slugify(title),
+        description: text(formData, "description"),
+        icon: text(formData, "icon") || null,
+        image,
+        isFeatured: bool(formData, "isFeatured"),
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("layanan", "updated");
+  } catch (error) {
+    logActionError("updateService", "layanan", error);
+  }
 }
 
 export async function deleteService(formData) {
@@ -236,29 +249,33 @@ export async function createArticle(formData) {
     });
     refresh("artikel", "created");
   } catch (error) {
-    logActionError("createArticle", error);
+    logActionError("createArticle", "artikel", error);
   }
 }
 
 export async function updateArticle(formData) {
-  await requireAdmin();
-  const title = text(formData, "title");
-  const status = text(formData, "status", "draft");
-  const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
-  await prisma.article.update({
-    where: { id: number(formData, "id") },
-    data: {
-      title,
-      slug: text(formData, "slug") || slugify(title),
-      category: text(formData, "category"),
-      excerpt: text(formData, "excerpt"),
-      content: text(formData, "content"),
-      image,
-      status,
-      publishedAt: status === "publish" ? new Date() : null
-    }
-  });
-  refresh("artikel", "updated");
+  try {
+    await requireAdmin();
+    const title = text(formData, "title");
+    const status = text(formData, "status", "draft");
+    const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
+    await prisma.article.update({
+      where: { id: number(formData, "id") },
+      data: {
+        title,
+        slug: text(formData, "slug") || slugify(title),
+        category: text(formData, "category"),
+        excerpt: text(formData, "excerpt"),
+        content: text(formData, "content"),
+        image,
+        status,
+        publishedAt: status === "publish" ? new Date() : null
+      }
+    });
+    refresh("artikel", "updated");
+  } catch (error) {
+    logActionError("updateArticle", "artikel", error);
+  }
 }
 
 export async function deleteArticle(formData) {
@@ -284,23 +301,27 @@ export async function createGallery(formData) {
     });
     refresh("galeri", "created");
   } catch (error) {
-    logActionError("createGallery", error);
+    logActionError("createGallery", "galeri", error);
   }
 }
 
 export async function updateGallery(formData) {
-  await requireAdmin();
-  const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
-  await prisma.gallery.update({
-    where: { id: number(formData, "id") },
-    data: {
-      title: text(formData, "title"),
-      image,
-      alt: text(formData, "alt") || null,
-      isActive: bool(formData, "isActive")
-    }
-  });
-  refresh("galeri", "updated");
+  try {
+    await requireAdmin();
+    const image = await saveUploadedImage(formData, "imageFile", text(formData, "image"));
+    await prisma.gallery.update({
+      where: { id: number(formData, "id") },
+      data: {
+        title: text(formData, "title"),
+        image,
+        alt: text(formData, "alt") || null,
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("galeri", "updated");
+  } catch (error) {
+    logActionError("updateGallery", "galeri", error);
+  }
 }
 
 export async function deleteGallery(formData) {
@@ -310,40 +331,44 @@ export async function deleteGallery(formData) {
 }
 
 export async function updateSettings(formData) {
-  await requireAdmin();
-  const heroImage = await saveUploadedImage(formData, "heroImageFile", text(formData, "hero_image"));
-  const settings = [
-    { key: "site_name", label: "Nama Website", group: "identity" },
-    { key: "site_tagline", label: "Tagline", group: "identity" },
-    { key: "phone", label: "Telepon", group: "contact" },
-    { key: "whatsapp", label: "WhatsApp", group: "contact" },
-    { key: "facebook_url", label: "Facebook URL", group: "social" },
-    { key: "instagram_url", label: "Instagram URL", group: "social" },
-    { key: "youtube_url", label: "YouTube URL", group: "social" },
-    { key: "address", label: "Alamat", group: "contact", type: "textarea" },
-    { key: "hero_eyebrow", label: "Hero Eyebrow", group: "homepage" },
-    { key: "hero_title", label: "Hero Title", group: "homepage", type: "textarea" },
-    { key: "hero_description", label: "Hero Description", group: "homepage", type: "textarea" },
-    { key: "hero_image", label: "Hero Image", group: "homepage" },
-    { key: "maps_embed_url", label: "Google Maps Embed URL", group: "contact", type: "textarea" }
-  ];
-  const valueFor = (key) => (key === "hero_image" ? heroImage : text(formData, key));
+  try {
+    await requireAdmin();
+    const heroImage = await saveUploadedImage(formData, "heroImageFile", text(formData, "hero_image"));
+    const settings = [
+      { key: "site_name", label: "Nama Website", group: "identity" },
+      { key: "site_tagline", label: "Tagline", group: "identity" },
+      { key: "phone", label: "Telepon", group: "contact" },
+      { key: "whatsapp", label: "WhatsApp", group: "contact" },
+      { key: "facebook_url", label: "Facebook URL", group: "social" },
+      { key: "instagram_url", label: "Instagram URL", group: "social" },
+      { key: "youtube_url", label: "YouTube URL", group: "social" },
+      { key: "address", label: "Alamat", group: "contact", type: "textarea" },
+      { key: "hero_eyebrow", label: "Hero Eyebrow", group: "homepage" },
+      { key: "hero_title", label: "Hero Title", group: "homepage", type: "textarea" },
+      { key: "hero_description", label: "Hero Description", group: "homepage", type: "textarea" },
+      { key: "hero_image", label: "Hero Image", group: "homepage" },
+      { key: "maps_embed_url", label: "Google Maps Embed URL", group: "contact", type: "textarea" }
+    ];
+    const valueFor = (key) => (key === "hero_image" ? heroImage : text(formData, key));
 
-  await prisma.$transaction(
-    settings.map((setting) =>
-      prisma.siteSetting.upsert({
-        where: { key: setting.key },
-        update: { value: valueFor(setting.key) },
-        create: {
-          key: setting.key,
-          label: setting.label,
-          value: valueFor(setting.key),
-          group: setting.group,
-          type: setting.type || "text"
-        }
-      })
-    )
-  );
+    await prisma.$transaction(
+      settings.map((setting) =>
+        prisma.siteSetting.upsert({
+          where: { key: setting.key },
+          update: { value: valueFor(setting.key) },
+          create: {
+            key: setting.key,
+            label: setting.label,
+            value: valueFor(setting.key),
+            group: setting.group,
+            type: setting.type || "text"
+          }
+        })
+      )
+    );
 
-  refresh("pengaturan", "updated");
+    refresh("pengaturan", "updated");
+  } catch (error) {
+    logActionError("updateSettings", "pengaturan", error);
+  }
 }

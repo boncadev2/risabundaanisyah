@@ -143,12 +143,14 @@ function AdminNotice({ notice, moduleName }) {
     created: `${moduleName} berhasil ditambahkan.`,
     updated: `${moduleName} berhasil diperbarui.`,
     deleted: `${moduleName} berhasil dihapus.`,
-    saved: `${moduleName} berhasil disimpan.`
+    saved: `${moduleName} berhasil disimpan.`,
+    failed: `${moduleName} gagal diproses. Cek format gambar, ukuran file, atau log server.`
   };
+  const isFailed = notice === "failed";
 
   return (
     <div className={`admin-notice ${notice}`}>
-      <strong>Berhasil</strong>
+      <strong>{isFailed ? "Gagal" : "Berhasil"}</strong>
       <span>{messages[notice] || messages.saved}</span>
     </div>
   );

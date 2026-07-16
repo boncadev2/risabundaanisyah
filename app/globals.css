@@ -2376,7 +2376,17 @@ th {
   color: #a21420;
 }
 
+.admin-notice.failed {
+  border-color: rgba(229, 31, 47, 0.2);
+  background: var(--brand-red-soft);
+  color: #a21420;
+}
+
 .admin-notice.deleted strong {
+  background: var(--brand-red);
+}
+
+.admin-notice.failed strong {
   background: var(--brand-red);
 }
 
