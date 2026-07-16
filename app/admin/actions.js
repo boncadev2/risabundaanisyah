@@ -40,19 +40,28 @@ function refresh(module, notice = "saved") {
   redirect(`/admin?module=${module}&notice=${notice}`);
 }
 
+function logActionError(action, error) {
+  console.error(`Admin action failed: ${action}`, error);
+  throw error;
+}
+
 export async function createDoctor(formData) {
-  await requireAdmin();
-  const photo = await saveUploadedImage(formData, "photoFile");
-  await prisma.doctor.create({
-    data: {
-      name: text(formData, "name"),
-      specialty: text(formData, "specialty"),
-      photo,
-      bio: text(formData, "bio") || null,
-      isActive: bool(formData, "isActive")
-    }
-  });
-  refresh("dokter", "created");
+  try {
+    await requireAdmin();
+    const photo = await saveUploadedImage(formData, "photoFile");
+    await prisma.doctor.create({
+      data: {
+        name: text(formData, "name"),
+        specialty: text(formData, "specialty"),
+        photo,
+        bio: text(formData, "bio") || null,
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("dokter", "created");
+  } catch (error) {
+    logActionError("createDoctor", error);
+  }
 }
 
 export async function updateDoctor(formData) {
@@ -161,21 +170,25 @@ export async function deleteBooking(formData) {
 }
 
 export async function createService(formData) {
-  await requireAdmin();
-  const title = text(formData, "title");
-  const image = await saveUploadedImage(formData, "imageFile");
-  await prisma.service.create({
-    data: {
-      title,
-      slug: text(formData, "slug") || slugify(title),
-      description: text(formData, "description"),
-      icon: text(formData, "icon") || null,
-      image,
-      isFeatured: bool(formData, "isFeatured"),
-      isActive: bool(formData, "isActive")
-    }
-  });
-  refresh("layanan", "created");
+  try {
+    await requireAdmin();
+    const title = text(formData, "title");
+    const image = await saveUploadedImage(formData, "imageFile");
+    await prisma.service.create({
+      data: {
+        title,
+        slug: text(formData, "slug") || slugify(title),
+        description: text(formData, "description"),
+        icon: text(formData, "icon") || null,
+        image,
+        isFeatured: bool(formData, "isFeatured"),
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("layanan", "created");
+  } catch (error) {
+    logActionError("createService", error);
+  }
 }
 
 export async function updateService(formData) {
@@ -204,23 +217,27 @@ export async function deleteService(formData) {
 }
 
 export async function createArticle(formData) {
-  await requireAdmin();
-  const title = text(formData, "title");
-  const status = text(formData, "status", "draft");
-  const image = await saveUploadedImage(formData, "imageFile");
-  await prisma.article.create({
-    data: {
-      title,
-      slug: text(formData, "slug") || slugify(title),
-      category: text(formData, "category"),
-      excerpt: text(formData, "excerpt"),
-      content: text(formData, "content"),
-      image,
-      status,
-      publishedAt: status === "publish" ? new Date() : null
-    }
-  });
-  refresh("artikel", "created");
+  try {
+    await requireAdmin();
+    const title = text(formData, "title");
+    const status = text(formData, "status", "draft");
+    const image = await saveUploadedImage(formData, "imageFile");
+    await prisma.article.create({
+      data: {
+        title,
+        slug: text(formData, "slug") || slugify(title),
+        category: text(formData, "category"),
+        excerpt: text(formData, "excerpt"),
+        content: text(formData, "content"),
+        image,
+        status,
+        publishedAt: status === "publish" ? new Date() : null
+      }
+    });
+    refresh("artikel", "created");
+  } catch (error) {
+    logActionError("createArticle", error);
+  }
 }
 
 export async function updateArticle(formData) {
@@ -251,20 +268,24 @@ export async function deleteArticle(formData) {
 }
 
 export async function createGallery(formData) {
-  await requireAdmin();
-  const image = await saveUploadedImage(formData, "imageFile");
-  if (!image) {
-    throw new Error("Foto galeri wajib diupload.");
-  }
-  await prisma.gallery.create({
-    data: {
-      title: text(formData, "title"),
-      image,
-      alt: text(formData, "alt") || null,
-      isActive: bool(formData, "isActive")
+  try {
+    await requireAdmin();
+    const image = await saveUploadedImage(formData, "imageFile");
+    if (!image) {
+      throw new Error("Foto galeri wajib diupload.");
     }
-  });
-  refresh("galeri", "created");
+    await prisma.gallery.create({
+      data: {
+        title: text(formData, "title"),
+        image,
+        alt: text(formData, "alt") || null,
+        isActive: bool(formData, "isActive")
+      }
+    });
+    refresh("galeri", "created");
+  } catch (error) {
+    logActionError("createGallery", error);
+  }
 }
 
 export async function updateGallery(formData) {

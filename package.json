@@ -11,7 +11,9 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:seed": "node --env-file=.env prisma/seed.js",
     "prisma:seed-admin": "node --env-file=.env prisma/seed-admin.js",
-    "prisma:check-admin": "node --env-file=.env prisma/check-admin.js"
+    "prisma:check-admin": "node --env-file=.env prisma/check-admin.js",
+    "prisma:check-data": "node --env-file=.env prisma/check-data.js",
+    "prisma:check-production": "node --env-file=.env prisma/check-production.js"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.8.0",
