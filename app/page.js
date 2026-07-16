@@ -138,12 +138,12 @@ export default async function HomePage() {
       <LoadingReveal type="quick" count={4}>
         <section className="quick-actions container">
           {[
-            ["Cari Dokter", Stethoscope],
-            ["Daftar Online", ClipboardList],
-            ["Jadwal Praktik", CalendarCheck],
-            ["IGD 24 Jam", Ambulance]
-          ].map(([label, Icon]) => (
-            <a href="#jadwal" className="quick-card" key={label}>
+            { label: "Cari Dokter", Icon: Stethoscope, href: "#dokter" },
+            { label: "Daftar Online", Icon: ClipboardList, href: whatsappHref },
+            { label: "Jadwal Praktik", Icon: CalendarCheck, href: "#dokter" },
+            { label: "IGD 24 Jam", Icon: Ambulance, href: `tel:${settings.phone}` }
+          ].map(({ label, Icon, href }) => (
+            <a href={href} className="quick-card" key={label}>
               <Icon size={50} />
               <span>{label}</span>
             </a>

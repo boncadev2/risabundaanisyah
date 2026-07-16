@@ -3495,16 +3495,32 @@ button:disabled,
     line-height: 1.12;
   }
 
+  .hero-actions .btn.primary {
+    display: none;
+  }
+
   .section {
     padding: 44px 0;
   }
 
   #layanan {
+    width: 100%;
+    max-width: none;
     padding-bottom: 24px;
   }
 
   #dokter {
+    width: 100%;
+    max-width: none;
     padding-top: 24px;
+  }
+
+  #layanan > .section-head,
+  #dokter > .section-head,
+  #dokter .doctor-filter-panel {
+    width: calc(100% - 40px);
+    margin-right: auto;
+    margin-left: auto;
   }
 
   #jadwal {
@@ -3540,17 +3556,66 @@ button:disabled,
   }
 
   .quick-actions {
-    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .quick-card {
-    min-height: 82px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+    min-height: 104px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 9px;
+    border: 1px solid rgba(18, 142, 212, 0.12);
+    border-radius: 18px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 252, 249, 0.92)),
+      radial-gradient(circle at 18% 10%, rgba(18, 142, 212, 0.14), transparent 34%);
+    box-shadow: 0 14px 34px rgba(6, 56, 72, 0.1);
+    text-align: center;
+    transform: translateY(0);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .quick-card::after {
+    content: "";
+    position: absolute;
+    right: -24px;
+    bottom: -28px;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: rgba(8, 166, 75, 0.1);
+  }
+
+  .quick-card svg {
+    position: relative;
+    z-index: 1;
+    width: 34px;
+    height: 34px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 10px 22px rgba(18, 142, 212, 0.12);
+    padding: 7px;
+  }
+
+  .quick-card span {
+    position: relative;
+    z-index: 1;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .quick-card:hover,
+  .quick-card:active {
+    border-color: rgba(18, 142, 212, 0.28);
+    box-shadow: 0 18px 38px rgba(6, 56, 72, 0.14);
+    transform: translateY(-3px);
   }
 
   .quick-card:last-child {
-    border-bottom: 0;
+    border-right: 1px solid var(--line);
   }
 
   .schedule-table-card {
@@ -3635,6 +3700,10 @@ button:disabled,
     scrollbar-width: thin;
   }
 
+  .service-mobile-slider .mobile-auto-track {
+    grid-auto-columns: minmax(290px, calc(100vw - 40px));
+  }
+
   .article-mobile-slider .mobile-auto-track,
   .gallery-mobile-slider .mobile-auto-track {
     grid-auto-columns: minmax(290px, calc(100vw - 40px));
@@ -3686,7 +3755,10 @@ button:disabled,
   }
 
   .doctor-grid {
-    grid-auto-columns: 86%;
+    grid-auto-columns: minmax(290px, calc(100vw - 40px));
+    scroll-padding-inline: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 
   .doctor-filter-panel {
