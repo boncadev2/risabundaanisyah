@@ -3510,14 +3510,13 @@ button:disabled,
   }
 
   #dokter {
-    width: 100%;
-    max-width: none;
+    width: min(1320px, calc(100% - 40px));
+    max-width: 1320px;
     padding-top: 24px;
   }
 
   #layanan > .section-head,
-  #dokter > .section-head,
-  #dokter .doctor-filter-panel {
+  #dokter > .section-head {
     width: calc(100% - 40px);
     margin-right: auto;
     margin-left: auto;
@@ -3755,10 +3754,9 @@ button:disabled,
   }
 
   .doctor-grid {
-    grid-auto-columns: minmax(290px, calc(100vw - 40px));
-    scroll-padding-inline: 20px;
-    padding-right: 20px;
-    padding-left: 20px;
+    grid-auto-columns: 86%;
+    scroll-padding-inline: 4px;
+    padding: 4px 4px 18px;
   }
 
   .doctor-filter-panel {
