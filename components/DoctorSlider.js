@@ -193,7 +193,7 @@ export default function DoctorSlider({ doctors }) {
                   {doctor.status}
                 </b>
                 <button className="doctor-profile-cta" type="button" onClick={() => setActiveDoctor(doctor)}>
-                  Lihat Profil
+                  Lihat Jadwal
                 </button>
               </article>
             ))}

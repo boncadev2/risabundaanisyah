@@ -201,36 +201,58 @@ export default async function HomePage() {
           <h2>Jadwal dokter hari ini.</h2>
         </div>
         <LoadingReveal type="table">
-          <div className="table-card">
-            <table>
-              <thead>
-                <tr>
-                  <th>Dokter</th>
-                  <th>Spesialis</th>
-                  <th>Hari</th>
-                  <th>Jam</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {doctorScheduleGroups.flatMap((doctor) =>
-                  doctor.schedules.map((schedule, index) => (
-                    <tr key={schedule.key}>
-                      {index === 0 && (
-                        <>
-                          <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.name}</td>
-                          <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.specialty}</td>
-                        </>
-                      )}
-                      <td>{schedule.day}</td>
-                      <td>{schedule.time}</td>
-                      <td><span className={schedule.status === "Tersedia" ? "badge success" : "badge danger"}>{schedule.status}</span></td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="table-card schedule-table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Dokter</th>
+                    <th>Spesialis</th>
+                    <th>Hari</th>
+                    <th>Jam</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {doctorScheduleGroups.flatMap((doctor) =>
+                    doctor.schedules.map((schedule, index) => (
+                      <tr key={schedule.key}>
+                        {index === 0 && (
+                          <>
+                            <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.name}</td>
+                            <td rowSpan={doctor.schedules.length} className="merged-cell">{doctor.specialty}</td>
+                          </>
+                        )}
+                        <td>{schedule.day}</td>
+                        <td>{schedule.time}</td>
+                        <td><span className={schedule.status === "Tersedia" ? "badge success" : "badge danger"}>{schedule.status}</span></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="schedule-mobile-list">
+              {doctorScheduleGroups.map((doctor) => (
+                <article className="schedule-mobile-card" key={doctor.key}>
+                  <div>
+                    <strong>{doctor.name}</strong>
+                    <span>{doctor.specialty}</span>
+                  </div>
+                  <div className="schedule-mobile-rows">
+                    {doctor.schedules.map((schedule) => (
+                      <p key={schedule.key}>
+                        <span>{schedule.day}</span>
+                        <strong>{schedule.time}</strong>
+                        <b className={schedule.status === "Tersedia" ? "badge success" : "badge danger"}>{schedule.status}</b>
+                      </p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
         </LoadingReveal>
       </section>
 

@@ -1575,6 +1575,10 @@ td.merged-cell {
   font-weight: 800;
 }
 
+.schedule-mobile-list {
+  display: none;
+}
+
 th {
   color: var(--muted);
   font-size: 12px;
@@ -3503,6 +3507,10 @@ button:disabled,
     padding-top: 24px;
   }
 
+  #jadwal {
+    display: none;
+  }
+
   .section-head {
     margin-bottom: 18px;
   }
@@ -3545,6 +3553,71 @@ button:disabled,
     border-bottom: 0;
   }
 
+  .schedule-table-card {
+    display: none;
+  }
+
+  .schedule-mobile-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .schedule-mobile-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+
+  .schedule-mobile-card > div:first-child {
+    display: grid;
+    gap: 3px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .schedule-mobile-card > div:first-child strong {
+    color: var(--brand-blue-dark);
+    font-size: 17px;
+  }
+
+  .schedule-mobile-card > div:first-child span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .schedule-mobile-rows {
+    display: grid;
+    gap: 9px;
+    margin-top: 12px;
+  }
+
+  .schedule-mobile-rows p {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 6px 10px;
+    border-radius: 8px;
+    background: #f8fcfb;
+    padding: 10px;
+  }
+
+  .schedule-mobile-rows p > span {
+    color: var(--ink);
+    font-weight: 900;
+  }
+
+  .schedule-mobile-rows p > strong {
+    color: var(--brand-blue-dark);
+    font-size: 13px;
+  }
+
+  .schedule-mobile-rows p > b {
+    grid-column: 1 / -1;
+  }
+
   .service-mobile-slider .mobile-auto-track,
   .article-mobile-slider .mobile-auto-track,
   .gallery-mobile-slider .mobile-auto-track {
@@ -3560,6 +3633,11 @@ button:disabled,
     padding: 4px 20px 18px;
     scrollbar-color: var(--brand-blue) var(--primary-soft);
     scrollbar-width: thin;
+  }
+
+  .article-mobile-slider .mobile-auto-track,
+  .gallery-mobile-slider .mobile-auto-track {
+    grid-auto-columns: minmax(290px, calc(100vw - 40px));
   }
 
   .service-mobile-slider .mobile-auto-track::-webkit-scrollbar,
@@ -3587,12 +3665,12 @@ button:disabled,
   }
 
   .article-mobile-slider .article-card {
-    min-height: 100%;
+    min-height: 430px;
   }
 
   .gallery-mobile-slider .gallery-card,
   .gallery-mobile-slider .gallery-card img {
-    min-height: 260px;
+    min-height: 380px;
   }
 
   .mobile-slider-btn {
