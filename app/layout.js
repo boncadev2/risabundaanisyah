@@ -2,7 +2,12 @@ import "./globals.css";
 
 export const metadata = {
   title: "RSIA Bunda Annisyah",
-  description: "Website dan admin panel RSIA Bunda Annisyah berbasis Next.js"
+  description: "Website dan admin panel RSIA Bunda Annisyah berbasis Next.js",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/logo.png"
+  }
 };
 
 export default function RootLayout({ children }) {

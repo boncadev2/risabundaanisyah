@@ -301,8 +301,8 @@ input {
   max-width: 780px;
   margin-top: 16px;
   color: var(--brand-blue-dark);
-  font-size: clamp(30px, 4vw, 46px);
-  line-height: 1.04;
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.12;
 }
 
 .hero p {
@@ -3514,8 +3514,8 @@ button:disabled,
   }
 
   .hero h1 {
-    font-size: 25px;
-    line-height: 1.12;
+    font-size: 22px;
+    line-height: 1.18;
   }
 
   .hero-actions .btn.primary {
