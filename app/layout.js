@@ -1,4 +1,5 @@
 import "./globals.css";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export const metadata = {
   title: "RSIA Bunda Annisyah",
@@ -13,7 +14,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <VisitorTracker />
+        {children}
+      </body>
     </html>
   );
 }

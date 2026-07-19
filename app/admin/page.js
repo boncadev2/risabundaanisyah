@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import AdminConfirmForm from "@/components/AdminConfirmForm";
 import {
   CalendarDays,
+  ChartNoAxesColumnIncreasing,
   ChartLine,
   ClipboardList,
   FileText,
@@ -16,7 +17,7 @@ import {
   UsersRound
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getAdminData } from "@/lib/cms";
+import { getAdminData, getVisitorStats } from "@/lib/cms";
 import { imageUrl } from "@/lib/images";
 import {
   createArticle,
@@ -48,6 +49,7 @@ const modules = [
   { label: "Layanan", slug: "layanan", icon: Stethoscope },
   { label: "Artikel", slug: "artikel", icon: FileText },
   { label: "Galeri", slug: "galeri", icon: GalleryHorizontal },
+  { label: "Statistik Pengunjung", slug: "statistik", icon: ChartNoAxesColumnIncreasing },
   { label: "Pengaturan", slug: "pengaturan", icon: Settings }
 ];
 
@@ -61,7 +63,10 @@ export default async function AdminPage({ searchParams }) {
   const activeModule = modules.some((item) => item.slug === params?.module) ? params.module : "dashboard";
   const activeLabel = modules.find((item) => item.slug === activeModule)?.label || "Dashboard";
   const notice = params?.notice || "";
-  const data = await getAdminData();
+  const [data, visitorStats] = await Promise.all([
+    getAdminData(),
+    activeModule === "statistik" ? getVisitorStats() : Promise.resolve(null)
+  ]);
 
   return (
     <main className="admin-layout">
@@ -113,6 +118,7 @@ export default async function AdminPage({ searchParams }) {
         {activeModule === "layanan" && <ServiceModule services={data.services} />}
         {activeModule === "artikel" && <ArticleModule articles={data.articles} />}
         {activeModule === "galeri" && <GalleryModule galleries={data.galleries} />}
+        {activeModule === "statistik" && <VisitorStatisticsModule stats={visitorStats} />}
         {activeModule === "pengaturan" && <SettingsModule user={user} settings={data.settings} />}
       </section>
     </main>
@@ -133,6 +139,49 @@ function DashboardModule({ data }) {
         <SummaryPanel title="Dokter Aktif" items={data.doctors.map((item) => `${item.name} - ${item.specialty}`)} href="/admin?module=dokter" />
       </div>
     </>
+  );
+}
+
+function VisitorStatisticsModule({ stats }) {
+  const maxViews = Math.max(...stats.daily.map((item) => item.views), 1);
+
+  return (
+    <div className="visitor-statistics">
+      <div className="metric-grid visitor-metrics">
+        <article><span>Total Tayangan</span><strong>{stats.totalViews.toLocaleString("id-ID")}</strong><small>Semua kunjungan halaman</small></article>
+        <article><span>Pengunjung Unik</span><strong>{stats.uniqueVisitors.toLocaleString("id-ID")}</strong><small>Berdasarkan perangkat/browser</small></article>
+        <article><span>Hari Ini</span><strong>{stats.todayViews.toLocaleString("id-ID")}</strong><small>Tayangan sejak pukul 00.00</small></article>
+        <article><span>7 Hari Terakhir</span><strong>{stats.weekViews.toLocaleString("id-ID")}</strong><small>Total tayangan mingguan</small></article>
+      </div>
+
+      <div className="analytics-grid">
+        <section className="admin-panel analytics-panel">
+          <PanelHead title="Kunjungan 7 Hari Terakhir" desc="Jumlah halaman yang dibuka setiap hari." />
+          <div className="visitor-chart">
+            {stats.daily.map((item) => (
+              <div className="visitor-bar-item" key={item.key}>
+                <strong>{item.views}</strong>
+                <div><i style={{ height: `${Math.max((item.views / maxViews) * 100, item.views ? 8 : 2)}%` }} /></div>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="admin-panel analytics-panel">
+          <PanelHead title="Halaman Terpopuler" desc="Halaman dengan jumlah tayangan terbanyak." />
+          <div className="popular-pages">
+            {stats.topPages.length ? stats.topPages.map((page, index) => (
+              <div key={page.path}>
+                <b>{index + 1}</b>
+                <span>{page.path === "/" ? "Beranda" : page.path}</span>
+                <strong>{page.views.toLocaleString("id-ID")}</strong>
+              </div>
+            )) : <p>Belum ada data kunjungan.</p>}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
 
