@@ -6,19 +6,23 @@ import {
   ChartNoAxesColumnIncreasing,
   ChartLine,
   ClipboardList,
+  Download,
   FileText,
   GalleryHorizontal,
   LogOut,
   Plus,
   Save,
   Settings,
+  ShieldCheck,
   Stethoscope,
   Trash2,
+  UserCog,
   UsersRound
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getAdminData, getVisitorStats } from "@/lib/cms";
+import { getAdminData, getAdminUsersData, getSecurityData, getVisitorStats } from "@/lib/cms";
 import { imageUrl } from "@/lib/images";
+import { canAccessModule } from "@/lib/rbac";
 import {
   createArticle,
   createBooking,
@@ -26,6 +30,7 @@ import {
   createGallery,
   createSchedule,
   createService,
+  createAdminUser,
   deleteArticle,
   deleteBooking,
   deleteDoctor,
@@ -38,7 +43,9 @@ import {
   updateGallery,
   updateSchedule,
   updateService,
-  updateSettings
+  updateSettings,
+  updateAdminUser,
+  changePassword
 } from "./actions";
 
 const modules = [
@@ -50,6 +57,8 @@ const modules = [
   { label: "Artikel", slug: "artikel", icon: FileText },
   { label: "Galeri", slug: "galeri", icon: GalleryHorizontal },
   { label: "Statistik Pengunjung", slug: "statistik", icon: ChartNoAxesColumnIncreasing },
+  { label: "Keamanan Admin", slug: "keamanan", icon: ShieldCheck },
+  { label: "Pengguna Admin", slug: "pengguna", icon: UserCog },
   { label: "Pengaturan", slug: "pengaturan", icon: Settings }
 ];
 
@@ -60,12 +69,15 @@ export default async function AdminPage({ searchParams }) {
   if (!user) redirect("/login");
 
   const params = await searchParams;
-  const activeModule = modules.some((item) => item.slug === params?.module) ? params.module : "dashboard";
-  const activeLabel = modules.find((item) => item.slug === activeModule)?.label || "Dashboard";
+  const availableModules = modules.filter((item) => canAccessModule(user.role, item.slug));
+  const activeModule = availableModules.some((item) => item.slug === params?.module) ? params.module : "dashboard";
+  const activeLabel = availableModules.find((item) => item.slug === activeModule)?.label || "Dashboard";
   const notice = params?.notice || "";
-  const [data, visitorStats] = await Promise.all([
+  const [data, visitorStats, securityData, adminUsersData] = await Promise.all([
     getAdminData(),
-    activeModule === "statistik" ? getVisitorStats() : Promise.resolve(null)
+    activeModule === "statistik" ? getVisitorStats({ from: params?.from, to: params?.to }) : Promise.resolve(null),
+    activeModule === "keamanan" ? getSecurityData() : Promise.resolve(null),
+    activeModule === "pengguna" ? getAdminUsersData() : Promise.resolve(null)
   ]);
 
   return (
@@ -80,7 +92,7 @@ export default async function AdminPage({ searchParams }) {
         </Link>
 
         <nav>
-          {modules.map(({ label, slug, icon: Icon }) => (
+          {availableModules.map(({ label, slug, icon: Icon }) => (
             <Link
               href={slug === "dashboard" ? "/admin" : `/admin?module=${slug}`}
               className={activeModule === slug ? "active" : ""}
@@ -119,6 +131,8 @@ export default async function AdminPage({ searchParams }) {
         {activeModule === "artikel" && <ArticleModule articles={data.articles} />}
         {activeModule === "galeri" && <GalleryModule galleries={data.galleries} />}
         {activeModule === "statistik" && <VisitorStatisticsModule stats={visitorStats} />}
+        {activeModule === "keamanan" && <SecurityModule data={securityData} />}
+        {activeModule === "pengguna" && <AdminUsersModule data={adminUsersData} currentUser={user} />}
         {activeModule === "pengaturan" && <SettingsModule user={user} settings={data.settings} />}
       </section>
     </main>
@@ -144,19 +158,30 @@ function DashboardModule({ data }) {
 
 function VisitorStatisticsModule({ stats }) {
   const maxViews = Math.max(...stats.daily.map((item) => item.views), 1);
+  const maxMonthly = Math.max(...stats.monthly.map((item) => item.views), 1);
+  const average = stats.uniqueVisitors ? (stats.totalViews / stats.uniqueVisitors).toFixed(1) : "0";
+  const exportHref = `/api/analytics/export?from=${encodeURIComponent(stats.from)}&to=${encodeURIComponent(stats.to)}`;
 
   return (
     <div className="visitor-statistics">
+      <form className="analytics-filter" method="get" action="/admin">
+        <input type="hidden" name="module" value="statistik" />
+        <label>Dari<input name="from" type="date" defaultValue={stats.from} /></label>
+        <label>Sampai<input name="to" type="date" defaultValue={stats.to} /></label>
+        <button type="submit">Terapkan Filter</button>
+        <Link className="analytics-export" href={exportHref}><Download size={17} /> Ekspor CSV</Link>
+      </form>
+
       <div className="metric-grid visitor-metrics">
-        <article><span>Total Tayangan</span><strong>{stats.totalViews.toLocaleString("id-ID")}</strong><small>Semua kunjungan halaman</small></article>
-        <article><span>Pengunjung Unik</span><strong>{stats.uniqueVisitors.toLocaleString("id-ID")}</strong><small>Berdasarkan perangkat/browser</small></article>
+        <article><span>Tayangan Periode</span><strong>{stats.totalViews.toLocaleString("id-ID")}</strong><small>Sesuai rentang tanggal</small></article>
+        <article><span>Pengunjung Unik</span><strong>{stats.uniqueVisitors.toLocaleString("id-ID")}</strong><small>Dalam periode terpilih</small></article>
         <article><span>Hari Ini</span><strong>{stats.todayViews.toLocaleString("id-ID")}</strong><small>Tayangan sejak pukul 00.00</small></article>
-        <article><span>7 Hari Terakhir</span><strong>{stats.weekViews.toLocaleString("id-ID")}</strong><small>Total tayangan mingguan</small></article>
+        <article><span>Halaman per Pengunjung</span><strong>{average}</strong><small>Rata-rata periode terpilih</small></article>
       </div>
 
       <div className="analytics-grid">
         <section className="admin-panel analytics-panel">
-          <PanelHead title="Kunjungan 7 Hari Terakhir" desc="Jumlah halaman yang dibuka setiap hari." />
+          <PanelHead title="Tren Harian" desc="Maksimal 31 hari terakhir dari periode yang dipilih." />
           <div className="visitor-chart">
             {stats.daily.map((item) => (
               <div className="visitor-bar-item" key={item.key}>
@@ -181,6 +206,68 @@ function VisitorStatisticsModule({ stats }) {
           </div>
         </section>
       </div>
+
+      <div className="analytics-grid analytics-secondary-grid">
+        <section className="admin-panel analytics-panel">
+          <PanelHead title="Jenis Perangkat" desc="Perangkat yang digunakan pengunjung." />
+          <DistributionList items={stats.devices} total={stats.totalViews} />
+        </section>
+        <section className="admin-panel analytics-panel">
+          <PanelHead title="Sumber Kunjungan" desc="Asal pengunjung sebelum membuka website." />
+          <DistributionList items={stats.sources} total={stats.totalViews} />
+        </section>
+      </div>
+
+      <section className="admin-panel analytics-panel monthly-panel">
+        <PanelHead title="Tren 12 Bulan" desc="Perbandingan jumlah tayangan per bulan." />
+        <div className="visitor-chart monthly-chart">
+          {stats.monthly.map((item) => (
+            <div className="visitor-bar-item" key={item.key}>
+              <strong>{item.views}</strong>
+              <div><i style={{ height: `${Math.max((item.views / maxMonthly) * 100, item.views ? 8 : 2)}%` }} /></div>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-panel analytics-panel visitor-detail-panel">
+        <PanelHead title="Detail Pengunjung Terbaru" desc="Maksimal 100 kunjungan terbaru pada periode yang dipilih." />
+        <div className="visitor-detail-table-wrap">
+          <table className="visitor-detail-table">
+            <thead><tr><th>Waktu</th><th>Alamat IP</th><th>Perangkat</th><th>Sistem Operasi</th><th>Browser</th><th>Halaman</th></tr></thead>
+            <tbody>
+              {stats.recentVisits.map((visit) => (
+                <tr key={visit.id}>
+                  <td>{visit.date}</td>
+                  <td><code>{visit.ipAddress}</code></td>
+                  <td>{visit.device}</td>
+                  <td>{visit.os}</td>
+                  <td>{visit.browser}</td>
+                  <td>{visit.path === "/" ? "Beranda" : visit.path}</td>
+                </tr>
+              ))}
+              {!stats.recentVisits.length && <tr><td colSpan={6}>Belum ada data kunjungan.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DistributionList({ items, total }) {
+  return (
+    <div className="distribution-list">
+      {items.length ? items.map((item) => {
+        const percentage = total ? Math.round((item.views / total) * 100) : 0;
+        return (
+          <div key={item.name}>
+            <p><span>{item.name}</span><strong>{item.views.toLocaleString("id-ID")} ({percentage}%)</strong></p>
+            <i><b style={{ width: `${percentage}%` }} /></i>
+          </div>
+        );
+      }) : <p>Belum ada data kunjungan.</p>}
     </div>
   );
 }
@@ -193,14 +280,114 @@ function AdminNotice({ notice, moduleName }) {
     updated: `${moduleName} berhasil diperbarui.`,
     deleted: `${moduleName} berhasil dihapus.`,
     saved: `${moduleName} berhasil disimpan.`,
-    failed: `${moduleName} gagal diproses. Cek format gambar, ukuran file, atau log server.`
+    failed: `${moduleName} gagal diproses. Cek format gambar, ukuran file, atau log server.`,
+    password_weak: "Password baru minimal 10 karakter dan harus memiliki huruf besar, huruf kecil, serta angka.",
+    password_mismatch: "Konfirmasi password baru tidak sama.",
+    password_invalid: "Password saat ini tidak sesuai.",
+    self_protected: "Anda tidak dapat menonaktifkan atau mengganti role akun sendiri.",
+    last_super_admin: "Super Admin terakhir tidak dapat dinonaktifkan atau diturunkan rolenya."
   };
-  const isFailed = notice === "failed";
+  const isFailed = ["failed", "password_weak", "password_mismatch", "password_invalid", "self_protected", "last_super_admin"].includes(notice);
 
   return (
     <div className={`admin-notice ${notice}`}>
       <strong>{isFailed ? "Gagal" : "Berhasil"}</strong>
       <span>{messages[notice] || messages.saved}</span>
+    </div>
+  );
+}
+
+function SecurityModule({ data }) {
+  return (
+    <div className="security-module">
+      <div className="security-summary">
+        <article><ShieldCheck size={28} /><div><strong>Perlindungan Login Aktif</strong><span>Maksimal 5 kegagalan dalam 15 menit</span></div></article>
+        <article><ChartLine size={28} /><div><strong>{data.failedToday} Percobaan Gagal</strong><span>Tercatat hari ini</span></div></article>
+      </div>
+
+      <div className="security-grid">
+        <section className="admin-panel">
+          <PanelHead title="Ganti Password" desc="Mengganti password akan mengakhiri semua sesi lama akun ini." />
+          <AdminConfirmForm action={changePassword} className="password-form" confirmMessage="Yakin ingin mengganti password dan keluar dari semua sesi?">
+            <label>Password Saat Ini<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
+            <label>Password Baru<input name="newPassword" type="password" minLength={10} autoComplete="new-password" required /></label>
+            <label>Konfirmasi Password<input name="confirmPassword" type="password" minLength={10} autoComplete="new-password" required /></label>
+            <small>Minimal 10 karakter, termasuk huruf besar, huruf kecil, dan angka.</small>
+            <button type="submit"><ShieldCheck size={17} /> Ganti Password</button>
+          </AdminConfirmForm>
+        </section>
+
+        <section className="admin-panel">
+          <PanelHead title="Riwayat Keamanan" desc="30 aktivitas keamanan terbaru." />
+          <div className="security-log-list">
+            {data.auditLogs.length ? data.auditLogs.map((log) => (
+              <article key={log.id}>
+                <div><strong>{log.details}</strong><span>{log.email}</span></div>
+                <div><small>{log.ipAddress}</small><time>{log.date}</time></div>
+              </article>
+            )) : <p>Belum ada aktivitas keamanan.</p>}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function AdminUsersModule({ data, currentUser }) {
+  return (
+    <div className="admin-users-module">
+      <section className="admin-panel">
+        <PanelHead title="Tambah Pengguna Admin" desc="Buat akun baru dan tentukan hak aksesnya." />
+        <AdminConfirmForm action={createAdminUser} className="admin-user-create-form" confirmMessage="Buat akun admin baru ini?">
+          <label>Nama<input name="name" required /></label>
+          <label>Email<input name="email" type="email" autoComplete="off" required /></label>
+          <label>Password Awal<input name="password" type="password" minLength={10} autoComplete="new-password" required /></label>
+          <label>Role<select name="role" defaultValue="operator">{data.roles.map((role) => <option value={role.slug} key={role.slug}>{role.name}</option>)}</select></label>
+          <button type="submit"><Plus size={16} /> Tambah Admin</button>
+        </AdminConfirmForm>
+      </section>
+
+      <div className="role-access-grid">
+        <article><strong>Super Admin</strong><span>Semua fitur, pengguna, pengaturan, statistik, dan keamanan.</span></article>
+        <article><strong>Admin</strong><span>Konten website, dokter, jadwal, booking, dan statistik.</span></article>
+        <article><strong>Operator</strong><span>Dashboard, booking pasien, dan keamanan akun sendiri.</span></article>
+      </div>
+
+      <section className="admin-panel admin-users-list-panel">
+        <PanelHead title="Daftar Pengguna" desc={`${data.users.length} akun admin terdaftar.`} />
+        <div className="admin-users-list">
+          {data.users.map((admin) => (
+            <AdminConfirmForm action={updateAdminUser} className="admin-user-row" confirmMessage={`Simpan perubahan akun ${admin.email}?`} key={admin.id}>
+              <input type="hidden" name="id" value={admin.id} />
+              <label>Nama<input name="name" defaultValue={admin.name} required /></label>
+              <label>Email<input name="email" type="email" defaultValue={admin.email} required /></label>
+              <label>Role<select name="role" defaultValue={admin.role}>{data.roles.map((role) => <option value={role.slug} key={role.slug}>{role.name}</option>)}</select></label>
+              <label>Password Baru<input name="newPassword" type="password" minLength={10} autoComplete="new-password" placeholder="Kosongkan jika tetap" /></label>
+              <label className="admin-active-check"><input name="isActive" type="checkbox" defaultChecked={admin.isActive} /> Aktif</label>
+              <div className="admin-user-meta"><span>{admin.status}</span><small>Dibuat {admin.createdAt}</small>{admin.id === Number(currentUser.id) && <b>Akun Anda</b>}</div>
+              <button type="submit"><Save size={15} /> Simpan</button>
+            </AdminConfirmForm>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-panel login-history-panel">
+        <PanelHead title="Riwayat Login" desc="50 percobaan login terbaru, termasuk login yang gagal." />
+        <div className="login-history-table-wrap">
+          <table className="login-history-table">
+            <thead><tr><th>Waktu</th><th>Email</th><th>Alamat IP</th><th>Status</th></tr></thead>
+            <tbody>
+              {data.loginAttempts.map((attempt) => (
+                <tr key={attempt.id}>
+                  <td>{attempt.date}</td><td>{attempt.email}</td><td>{attempt.ipAddress}</td>
+                  <td><span className={attempt.success ? "login-ok" : "login-failed"}>{attempt.success ? "Berhasil" : "Gagal"}</span></td>
+                </tr>
+              ))}
+              {!data.loginAttempts.length && <tr><td colSpan={4}>Belum ada riwayat login.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
@@ -226,7 +413,7 @@ function DoctorModule({ doctors }) {
       <AdminConfirmForm action={createDoctor} className="crud-form doctor-form" confirmMessage="Tambah data dokter ini?">
         <label>Nama Dokter<input name="name" placeholder="Contoh: dr. Sari Amelia" required /></label>
         <label>Spesialis<input name="specialty" placeholder="Contoh: Sp. Anak" required /></label>
-        <label className="file-field">Foto dokter<input name="photoFile" type="file" accept="image/*" /></label>
+        <label className="file-field">Foto dokter<input name="photoFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
         <label className="doctor-bio-field">Bio Singkat<textarea name="bio" placeholder="Tulis pengalaman, fokus layanan, atau pendekatan konsultasi dokter." /></label>
         <label className="check-field"><input type="checkbox" name="isActive" defaultChecked /> Aktif</label>
         <button><Plus size={16} /> Tambah</button>
@@ -247,7 +434,7 @@ function DoctorModule({ doctors }) {
                 <input type="hidden" name="photo" defaultValue={doctor.photo} />
                 <label>Nama Dokter<input name="name" defaultValue={doctor.name} required /></label>
                 <label>Spesialis<input name="specialty" defaultValue={doctor.specialty} required /></label>
-                <label className="file-field">Ganti foto<input name="photoFile" type="file" accept="image/*" /></label>
+                <label className="file-field">Ganti foto<input name="photoFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
                 <label className="check-field"><input type="checkbox" name="isActive" defaultChecked={doctor.isActive} /> Aktif</label>
                 <label className="doctor-bio-field">Bio<textarea name="bio" defaultValue={doctor.bio} placeholder="Bio dokter" /></label>
               </AdminConfirmForm>
@@ -362,7 +549,7 @@ function ServiceModule({ services }) {
         <label>Slug<input name="slug" placeholder="slug-layanan" /></label>
         <label>Deskripsi<input name="description" placeholder="Deskripsi" required /></label>
         <label>Icon<input name="icon" placeholder="pregnant, baby, lab, bed" /></label>
-        <label className="file-field">Gambar layanan<input name="imageFile" type="file" accept="image/*" /></label>
+        <label className="file-field">Gambar layanan<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
         <label className="check-field"><input type="checkbox" name="isFeatured" defaultChecked /> Unggulan</label>
         <label className="check-field"><input type="checkbox" name="isActive" defaultChecked /> Aktif</label>
         <button><Plus size={16} /> Tambah</button>
@@ -383,7 +570,7 @@ function ServiceModule({ services }) {
                 <label>Slug<input name="slug" defaultValue={service.slug} required /></label>
                 <label>Deskripsi<input name="description" defaultValue={service.description} required /></label>
                 <label>Icon<input name="icon" defaultValue={service.icon} /></label>
-                <label className="file-field">Ganti gambar<input name="imageFile" type="file" accept="image/*" /></label>
+                <label className="file-field">Ganti gambar<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
                 <label className="check-field"><input type="checkbox" name="isFeatured" defaultChecked={service.isFeatured} /> Unggulan</label>
                 <label className="check-field"><input type="checkbox" name="isActive" defaultChecked={service.isActive} /> Aktif</label>
               </AdminConfirmForm>
@@ -408,7 +595,7 @@ function ArticleModule({ articles }) {
         <label>Slug<input name="slug" placeholder="slug-artikel" /></label>
         <label>Kategori<input name="category" placeholder="Kategori" required /></label>
         <label>Ringkasan<input name="excerpt" placeholder="Ringkasan" required /></label>
-        <label className="file-field">Gambar artikel<input name="imageFile" type="file" accept="image/*" /></label>
+        <label className="file-field">Gambar artikel<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
         <label>Status<select name="status" defaultValue="publish"><option value="publish">Publish</option><option value="draft">Draft</option></select></label>
         <label className="module-full-field">Konten Artikel<textarea name="content" placeholder="Konten artikel" required /></label>
         <button><Plus size={16} /> Tambah</button>
@@ -432,7 +619,7 @@ function ArticleModule({ articles }) {
                 <label>Slug<input name="slug" defaultValue={article.slug} required /></label>
                 <label>Kategori<input name="category" defaultValue={article.category} required /></label>
                 <label>Ringkasan<input name="excerpt" defaultValue={article.excerpt} required /></label>
-                <label className="file-field">Ganti gambar<input name="imageFile" type="file" accept="image/*" /></label>
+                <label className="file-field">Ganti gambar<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
                 <label>Status<select name="status" defaultValue={article.status}><option value="publish">Publish</option><option value="draft">Draft</option></select></label>
                 <label className="module-full-field">Konten<textarea name="content" defaultValue={article.content} required /></label>
               </AdminConfirmForm>
@@ -454,7 +641,7 @@ function GalleryModule({ galleries }) {
       <PanelHead title="Galeri Rumah Sakit" desc="Tambah, edit, dan hapus foto fasilitas." />
       <AdminConfirmForm action={createGallery} className="crud-form module-form gallery-admin-form" confirmMessage="Tambah foto galeri ini?">
         <label>Judul Foto<input name="title" placeholder="Judul foto" required /></label>
-        <label className="file-field">Upload foto<input name="imageFile" type="file" accept="image/*" required /></label>
+        <label className="file-field">Upload foto<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
         <label>Alt Text<input name="alt" placeholder="Alt text" /></label>
         <label className="check-field"><input type="checkbox" name="isActive" defaultChecked /> Aktif</label>
         <button><Plus size={16} /> Tambah</button>
@@ -475,7 +662,7 @@ function GalleryModule({ galleries }) {
                 <input type="hidden" name="id" defaultValue={gallery.id} />
                 <input type="hidden" name="image" defaultValue={gallery.imageFile} />
                 <label>Judul<input name="title" defaultValue={gallery.title} required /></label>
-                <label className="file-field">Ganti foto<input name="imageFile" type="file" accept="image/*" /></label>
+                <label className="file-field">Ganti foto<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
                 <label>Alt Text<input name="alt" defaultValue={gallery.alt} /></label>
                 <label className="check-field"><input type="checkbox" name="isActive" defaultChecked={gallery.isActive} /> Aktif</label>
               </AdminConfirmForm>
@@ -512,7 +699,7 @@ function SettingsModule({ user, settings }) {
         <label className="settings-wide">Hero Title<textarea name="hero_title" defaultValue={settings.hero_title} required /></label>
         <label className="settings-wide">Hero Description<textarea name="hero_description" defaultValue={settings.hero_description} required /></label>
         <input type="hidden" name="hero_image" defaultValue={settings.hero_image || ""} />
-        <label className="file-field settings-file-field">Hero Image<input name="heroImageFile" type="file" accept="image/*" /></label>
+        <label className="file-field settings-file-field">Hero Image<input name="heroImageFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
         <div className="settings-image-preview">
           <span>Preview Hero Image</span>
           <img src={heroPreview} alt="Preview hero homepage" />

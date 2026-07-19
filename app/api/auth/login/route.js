@@ -7,17 +7,38 @@ export async function POST(request) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
 
+  const ipAddress = clientIp(request);
+  const { prisma } = await import("@/lib/prisma");
+  const blockedSince = new Date(Date.now() - 15 * 60 * 1000);
+  const identityFilters = [{ email }];
+  if (ipAddress !== "unknown") identityFilters.push({ ipAddress });
+  const failedAttempts = await prisma.loginAttempt.count({
+    where: { success: false, createdAt: { gte: blockedSince }, OR: identityFilters }
+  });
+
+  if (failedAttempts >= 5) {
+    return NextResponse.redirect(requestUrl(request, "/login?error=locked"), 303);
+  }
+
   const user = await findUser(email, password);
 
   if (!user) {
+    await recordAttempt(prisma, { email, ipAddress, success: false, reason: "invalid_credentials" });
     return NextResponse.redirect(requestUrl(request, "/login?error=invalid"), 303);
   }
+
+  await Promise.all([
+    recordAttempt(prisma, { email, ipAddress, success: true, reason: "success" }),
+    prisma.loginAttempt.deleteMany({ where: { success: false, OR: identityFilters } }),
+    prisma.auditLog.create({ data: { userId: user.id, userEmail: user.email, action: "LOGIN_SUCCESS", details: "Login admin berhasil", ipAddress } })
+  ]);
 
   const token = signSession({
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role
+    role: user.role,
+    sessionVersion: user.sessionVersion
   });
 
   const response = NextResponse.redirect(requestUrl(request, "/admin"), 303);
@@ -30,6 +51,14 @@ export async function POST(request) {
   });
 
   return response;
+}
+
+function clientIp(request) {
+  return String(request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown").split(",")[0].trim().slice(0, 191);
+}
+
+async function recordAttempt(prisma, data) {
+  return prisma.loginAttempt.create({ data });
 }
 
 async function findUser(email, password) {
@@ -70,7 +99,8 @@ async function findPrismaUser(email, password) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role.slug
+      role: user.role.slug,
+      sessionVersion: user.sessionVersion
     };
   } catch (error) {
     console.error("Failed to login with database user", error);

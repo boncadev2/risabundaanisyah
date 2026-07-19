@@ -16,7 +16,8 @@ export async function POST(request) {
         visitorId,
         path,
         referrer: String(body.referrer || "").slice(0, 2000) || null,
-        userAgent: String(request.headers.get("user-agent") || "").slice(0, 1000) || null
+        userAgent: String(request.headers.get("user-agent") || "").slice(0, 1000) || null,
+        ipAddress: clientIp(request)
       }
     });
 
@@ -25,4 +26,10 @@ export async function POST(request) {
     console.error("Failed to record visitor", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
+}
+
+function clientIp(request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  const value = forwarded?.split(",")[0] || request.headers.get("x-real-ip") || "";
+  return String(value).trim().slice(0, 191) || null;
 }

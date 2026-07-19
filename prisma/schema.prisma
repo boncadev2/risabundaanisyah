@@ -36,8 +36,34 @@ model User {
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id])
   isActive  Boolean  @default(true)
+  sessionVersion Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  email     String
+  ipAddress String
+  success   Boolean  @default(false)
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  userEmail String?
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model Doctor {
@@ -135,9 +161,11 @@ model VisitorEvent {
   path      String
   referrer  String?  @db.Text
   userAgent String?  @db.Text
+  ipAddress String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([visitorId])
   @@index([path])
+  @@index([ipAddress])
 }

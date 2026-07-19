@@ -19,7 +19,9 @@ export default async function LoginPage({ searchParams }) {
         <h1>Masuk ke Admin RSIA</h1>
         <p>Gunakan akun admin untuk mengelola dokter, jadwal, booking, layanan, artikel, dan galeri.</p>
 
-        {params?.error && <div className="alert">Email, password, atau akses role tidak sesuai.</div>}
+        {params?.error === "locked" && <div className="alert">Terlalu banyak percobaan login. Coba kembali setelah 15 menit.</div>}
+        {params?.error && params.error !== "locked" && <div className="alert">Email, password, atau akses role tidak sesuai.</div>}
+        {params?.notice === "password_changed" && <div className="login-success">Password berhasil diubah. Silakan login kembali.</div>}
 
         <LoginForm />
       </section>

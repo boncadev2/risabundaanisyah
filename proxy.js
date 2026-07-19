@@ -8,7 +8,7 @@ export function proxy(request) {
   const { pathname } = request.nextUrl;
   const needsAuth = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  if (!needsAuth) return NextResponse.next();
+  if (!needsAuth) return secureResponse(NextResponse.next());
 
   const token = request.cookies.get("rsia_session")?.value;
 
@@ -24,10 +24,18 @@ export function proxy(request) {
       return NextResponse.redirect(requestUrl(request, "/login?error=forbidden"));
     }
 
-    return NextResponse.next();
+    return secureResponse(NextResponse.next());
   } catch {
     return NextResponse.redirect(requestUrl(request, "/login"));
   }
+}
+
+function secureResponse(response) {
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return response;
 }
 
 export const config = {
